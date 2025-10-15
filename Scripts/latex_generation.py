@@ -9,11 +9,11 @@ from dotenv import load_dotenv
 import yaml
 
 class SQL_TO_LATEX:
-    def __init__(self, working_folder, data_access, queries_folder):
+    def __init__(self, working_folder, data_access, queries_folder, template_file):
         self.working_folder = working_folder
         self.data_access = data_access 
         self.queries_folder = queries_folder
-        self.template_file = os.path.join('.', 'Templates', 'main_report.tex') # Root, templates. 
+        self.template_file = template_file
         self.output_folder = os.path.join(self.working_folder, 'Reportes BI')
 
     def sql_conexion(self):
@@ -83,17 +83,10 @@ class SQL_TO_LATEX:
             caption = name.replace('_', ' ').title()
             latex_tables[name] = sanitized_df.to_latex(index=False, longtable=True, escape=False, na_rep="", caption=caption, label=f"tab:{name}")
 
-        # Build the LaTeX document dynamically
-        rendered_tex = (
-            "\\documentclass{article}\n"
-            "\\usepackage{booktabs}\n"
-            "\\usepackage{longtable}\n"
-            "\\begin{document}\n\n"
-        )
-        for name, table in latex_tables.items():
-            section_name = name.replace('_', ' ').title()
-            rendered_tex += f"\\section*{{{section_name}}}\n{table}\n\n"
-        rendered_tex += "\\end{document}"
+        template_dir, template_name = os.path.split(self.template_file)
+        env = Environment(loader=FileSystemLoader(template_dir or '.'), autoescape=False)
+        template = env.get_template(template_name)
+        rendered_tex = template.render(**latex_tables)
 
         os.makedirs(self.output_folder, exist_ok=True)
         output_filename = datetime.now().strftime('%Y%m%d_%H%M%S_report.tex')
@@ -134,5 +127,6 @@ if __name__ == "__main__":
     # Set queries folder
     queries_folder = os.path.join(root, "sql_queries")
     # Initialize and run
-    app = SQL_TO_LATEX(working_folder, data_access, queries_folder)
+    template_file = os.path.join('.', 'Templates', 'main_report.tex') # Root, templates. 
+    app = SQL_TO_LATEX(working_folder, data_access, queries_folder, template_file)
     app.reporting_latex_run()

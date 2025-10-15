@@ -5,6 +5,7 @@ import yaml
 from typing import Dict, List, Optional
 from datetime import date
 from Scripts.latex_generation import SQL_TO_LATEX as LatexGen
+from Scripts.docx_generation import DOCX_TO_LATEX
 
 class SQL_TO_LATEX:
 
@@ -16,17 +17,23 @@ class SQL_TO_LATEX:
         self.data_access = self._load_variables(self.yaml_path)
         self.today = date.today()
         self.queries_folder = os.path.join(self.folder_root, "sql_queries")
-        self.latex_generation = LatexGen(self.working_folder, self.data_access, self.queries_folder)
-        self.template_file = os.path.join('.', 'Templates', 'main_report.tex') # Root, templates. 
+        self.template_file_latex = os.path.join('.', 'Templates', 'main_report.tex') # Root, templates. 
+        self.template_file_docx = os.path.join('.', 'Templates', 'template.docx') # Root, templates.
         self.output_folder = os.path.join(self.working_folder, 'Reportes BI')
-        
+        self.latex_generation = LatexGen(self.working_folder, self.data_access, self.queries_folder, self.template_file_latex)
+        self.docx_generation = DOCX_TO_LATEX(self.working_folder, self.data_access, self.queries_folder, self.template_file_docx)
+
     def menu(self):
         print("\nMenu Options:")
         print("1. SQL to Markdown")
+        print("2. SQL to DOCX")
 
         user_choice = input("Select an option: ").strip()
         if user_choice == "1":
             self.latex_generation.reporting_latex_run()
+        elif user_choice == "2":
+            self.docx_generation.reporting_docx_run()
+
 
         else:
             print("Invalid option. Please try again.")
