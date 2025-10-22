@@ -1,11 +1,12 @@
 import os
 import re   
-from dotenv import load_dotenv
 import yaml
+import argparse
 from typing import Dict, List, Optional
 from datetime import date
 from Scripts.latex_generation import SQL_TO_LATEX as LatexGen
 from Scripts.docx_generation import DOCX_TO_LATEX
+from dotenv import load_dotenv
 
 class SQL_TO_LATEX:
 
@@ -22,19 +23,27 @@ class SQL_TO_LATEX:
         self.output_folder = os.path.join(self.working_folder, 'Reportes BI')
         self.latex_generation = LatexGen(self.working_folder, self.data_access, self.queries_folder, self.template_file_latex)
         self.docx_generation = DOCX_TO_LATEX(self.working_folder, self.data_access, self.queries_folder, self.template_file_docx)
+        self.args = self.parse_arguments()
+
+    def parse_arguments(self):
+        parser = argparse.ArgumentParser(description="SQL to Report Generator")
+        parser.add_argument("-report", type=str, choices=["1", "2"], 
+                          help="Report type: 1 for SQL to Markdown, 2 for SQL to DOCX")
+        return parser.parse_args()
 
     def menu(self):
-        print("\nMenu Options:")
-        print("1. SQL to Markdown")
-        print("2. SQL to DOCX")
-
-        user_choice = input("Select an option: ").strip()
+        if self.args.report:
+            user_choice = self.args.report
+        else:
+            print("\nMenu Options:")
+            print("1. SQL to Markdown")
+            print("2. SQL to DOCX")
+            user_choice = input("Select an option: ").strip()
+        
         if user_choice == "1":
             self.latex_generation.reporting_latex_run()
         elif user_choice == "2":
             self.docx_generation.reporting_docx_run()
-
-
         else:
             print("Invalid option. Please try again.")
         return
